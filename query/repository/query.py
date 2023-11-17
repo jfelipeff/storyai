@@ -2,14 +2,14 @@ from typing import Dict, Any
 
 from sqlalchemy import update, delete, insert
 from sqlalchemy.future import select
-from sqlalchemy.orm import Session
-from ..models.query import Query 
+from sqlalchemy.ext.asyncio import AsyncSession
+from models.query import Query 
 from datetime import datetime
 
 class QueryRepository: 
     
-    def __init__(self, sess:Session):
-        self.sess:Session = sess
+    def __init__(self, sess:AsyncSession):
+        self.sess:AsyncSession = sess
     
     async def insert_query(self, query: Query) -> bool: 
         try:
@@ -27,7 +27,7 @@ class QueryRepository:
        try:
            details["timeout"] = datetime.strptime(details["timeout"] , "%H:%M")
            details["timein"] = datetime.strptime(details["timein"] , "%H:%M")
-           sql = update(Attendance_Member).where(Attendance_Member.id == id).values(**details)
+           sql = update(Query).where(Query.id == id).values(**details)
            sql.execution_options(synchronize_session="fetch")
            await self.sess.execute(sql)
            
@@ -37,21 +37,18 @@ class QueryRepository:
    
     async def delete_attendance(self, id:int) -> bool: 
         try:
-           sql = delete(Attendance_Member).where(Attendance_Member.id == id)
+           sql = delete(Query).where(Query.id == id)
            sql.execution_options(synchronize_session="fetch")
            await self.sess.execute(sql)
         except: 
             return False 
         return True
     
-    async def get_all_attendance(self):
-        q = await self.sess.execute(select(Attendance_Member))
+    async def get_all_queries(self):
+        q = await self.sess.execute(select(Query))
         return q.scalars().all()
     
-    async def get_attendance(self, id:int): 
-        q = await self.sess.execute(select(Attendance_Member).where(Attendance_Member.member_id == id))
+    async def get_query(self, id:int): 
+        q = await self.sess.execute(select(Query).where(Query.id == id))
         return q.scalars().all()
 
-    async def check_attendance(self, id:int): 
-        q = await self.sess.execute(select(Attendance_Member).where(Attendance_Member.id == id))
-        return q.scalar()
